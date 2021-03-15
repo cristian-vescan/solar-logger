@@ -97,12 +97,14 @@ def do_map(client, config, inverter):
         while k < 4:
             try:
                 result = read_registers(client, config.slave, inverter._register_map[register])
-                if result.isError():
+                if (result == None) or result.isError():
                     time.sleep(2)
                     k += 1
                     if config.debug:
                         print("read register error", register, k)
                 else:
+                    if config.debug:                        
+                        print("read register fine", register, k)
                     break
 
             except Exception as e:
@@ -113,10 +115,7 @@ def do_map(client, config, inverter):
                     print("trying to recover", register, k)
             time.sleep(0.25)
 
-        if k > 3:
-            return True
-
-        if (result == -1):
+        if (result == None) or result.isError():
             continue
 
         value = call_function(inverter._register_map[register]['type'], result.registers )
@@ -324,7 +323,12 @@ def main():
     if config.debug:
         print("got it")
 
-    inverter_ip = inverter.inv_address()
+    #don't search for inverter if we already have it's address
+    if config.inverter_ip == "":
+	    inverter_ip = inverter.inv_address()
+    else:
+        inverter_ip = config.inverter_ip
+	  	  
     print(inverter_ip)
     if inverter_ip != "":
         config.inverter_ip = inverter_ip
@@ -388,7 +392,7 @@ def main():
         tmax = m[0]['Temp']
 
     except Exception as e:
-        print("main 1 error: %s" % str(e))
+        print("main 1 error: %s %s" % (s, str(e)))
         y_exp = 0
         y_tot = 0
         y_gen = 0
@@ -404,7 +408,7 @@ def main():
         min_ins = m[0]['Insulation']
 
     except Exception as e:
-        print("main 2 error: %s" % str(e))
+        print("main 2 error:%s %s" % (s, str(e)))
         if config.debug:
             print(s)
 

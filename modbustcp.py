@@ -3,10 +3,7 @@ import time
 
 
 def connect_bus(ip="192.168.88.250", PortN = 502, timeout = 3):
-    client = ModbusClient(host=ip, port=PortN, timeout=timeout, RetryOnEmpty = True, retries = 3)
-    time.sleep(1)
-    client.connect()
-    time.sleep(1)
+    client = ModbusClient(host=ip, port=PortN, timeout=timeout, RetryOnEmpty = True, retries = 3)    
     return client
     
 def close_bus(client):
@@ -15,8 +12,11 @@ def close_bus(client):
     del client
     
     
-def read_registers(client, UnitID, data):
+def read_registers(client, UnitID, data):    
     try:
+	   # connect JIT for request else my inverter will refuse connection
+        client.connect()
+        time.sleep(1)
         nb = int(data['registers'])
         if data['method'] == "hold":
             result = client.read_holding_registers(int(data['addr']), nb, unit=UnitID)
@@ -35,8 +35,10 @@ def read_registers(client, UnitID, data):
                     break
                 continue
         time.sleep(0.025)
+        client.close()
         return result
     except Exception as e:
         print("mdobus read_registers error: %s" % str(e))
-        return -1
+        client.close()
+        return None
         

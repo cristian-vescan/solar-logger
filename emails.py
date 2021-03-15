@@ -17,6 +17,10 @@ Date: %s
 
 def send_mail(content):
     global message_str
+	#don't try to send emails if no email is configured
+    if config.fromaddr == "":
+        return
+
     if config.email_sent == content:
         return
     
